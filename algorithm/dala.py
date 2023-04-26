@@ -47,8 +47,12 @@ def getReadRange(vals, BER):
     return vals[num_discard], vals[-num_discard]
 
 def refine(level_alloc):
-    # close the gap between adjacent levels
-    # List of [Rlow, Rhigh, tmin, tmax]
+    '''
+    close the gap between adjacent read ranges
+    Example: list of [Rlow, Rhigh, tmin, tmax]
+        [2, 14, 0, 4], [16, 28, 16, 20], [32, 44, 33, 37], [48, 56, 46, 50]]
+    --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]]
+    '''
     for i in range(1, len(level_alloc)):
         merge = int((level_alloc[i - 1][1] + level_alloc[i][0]) / 2)
         level_alloc[i - 1][1] = merge
