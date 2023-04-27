@@ -1,8 +1,7 @@
-import time
-import tqdm
-import sys
+import json
+import pprint
 
-date="Apr25"
+date="Apr26"
 
 distributions = {}
 def init_model():
@@ -50,13 +49,16 @@ def refine(level_alloc):
     '''
     close the gap between adjacent read ranges
     Example: list of [Rlow, Rhigh, tmin, tmax]
-        [2, 14, 0, 4], [16, 28, 16, 20], [32, 44, 33, 37], [48, 56, 46, 50]]
-    --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]]
+        [2, 14, 0, 4], [16, 28, 16, 20], [32, 44, 33, 37], [48, 56, 46, 50]
+    --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]
+    --> [0, ...                                               , 63, ...  ]
     '''
     for i in range(1, len(level_alloc)):
         merge = int((level_alloc[i - 1][1] + level_alloc[i][0]) / 2)
         level_alloc[i - 1][1] = merge
         level_alloc[i][0] = merge
+    level_alloc[0][0] = 0
+    level_alloc[len(level_alloc)-1][1] = 63
     return level_alloc
 
 def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1):
@@ -71,9 +73,33 @@ def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1):
         else:
             high_BER = cur_BER
             best_level, best_BER = cur_levels, cur_BER
-    return refine(best_level), best_BER
+    refined = refine(best_level)
+    print(refined, best_BER)
+    assert len(refined) == specified_levels
+    return refined
+
+def read_from_json(filename):
+    return json.load(open(filename))
+
+def write_to_json(data, filename):
+    json.dump(data, open(filename, "w"), indent=1)
+
+def dump_to_json(level_alloc):
+    if len(level_alloc) == 16:
+        bits_per_cell = 4
+    elif len(level_alloc) == 8:
+        bits_per_cell = 3
+    elif len(level_alloc) == 4:
+        bits_per_cell = 2
+    bpc = read_from_json(f"../settings/{bits_per_cell}bpc.json")
+    for i in range(0, len(level_alloc)):
+        # [Rlow, Rhigh, tmin, tmax]
+        bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = level_alloc[i][1]
+        bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = level_alloc[i][2]
+        bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = level_alloc[i][3]
+    write_to_json(bpc, f"../settings/{bits_per_cell}bpc_dala_{date}.json")
 
 
 if __name__ == "__main__":
     init_model()
-    print(minimal_BER(4, 0.1))
+    dump_to_json(minimal_BER(4, 0.1))
