@@ -116,14 +116,15 @@ def dump_to_json(level_alloc):
     bpc = read_from_json(f"../settings/{bits_per_cell}bpc.json")
     for i in range(0, len(level_alloc)):
         # [Rlow, Rhigh, tmin, tmax]
-        bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = level_alloc[i][1]
-        bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = level_alloc[i][2]
-        bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = level_alloc[i][3]
+        bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = int(level_alloc[i][1])
+        bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = int(level_alloc[i][2])
+        bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = int(level_alloc[i][3])
     write_to_json(bpc, f"../settings/{bits_per_cell}bpc_SBA_{date}.json")
 
 
 if __name__ == "__main__":
     init_model()
-    res = minimal_BER(0.5, 2, 0.1)
+    res = minimal_BER(0.1, 2, 0.01)
     dump_to_json(res[4])
     dump_to_json(res[8])
+    dump_to_json(res[16])

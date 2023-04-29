@@ -113,3 +113,4 @@ if __name__ == "__main__":
     init_model()
     dump_to_json(minimal_BER(4, 1e-1))
     dump_to_json(minimal_BER(8, 1e-3))
+    dump_to_json(minimal_BER(16, 1e-5))
