@@ -24,8 +24,8 @@ def init_distributions():
             if (tmin, tmax) not in distributions:
                 distributions[(tmin, tmax)] = []
             # only use 200 cells' data
-            if len(distributions[(tmin, tmax)]) == 200:
-                continue
+            # if len(distributions[(tmin, tmax)]) == 200:
+            #     continue
             distributions[(tmin, tmax)].append(after_relax)
 
 def check():
@@ -34,7 +34,7 @@ def check():
     for tmin in range(0, 60):
         tmax = tmin + 4
         distributions[(tmin, tmax)].sort()
-        if len(distributions[(tmin, tmax)]) != 200:
+        if len(distributions[(tmin, tmax)]) < 200:
             print("ERROR:", tmin, tmax, len(distributions[(tmin, tmax)]))
 
 def dump():

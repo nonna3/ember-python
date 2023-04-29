@@ -1,7 +1,9 @@
 import json
 import pprint
 
-date="Apr26"
+date="Apr29"
+
+DEBUG = False
 
 distributions = {}
 def init_model():
@@ -15,10 +17,14 @@ def init_model():
 
 
 def level_inference(BER):
+    if DEBUG:
+        print(BER, "Started")
     levels = []
     for tmin in range(0, 60):
         tmax = tmin + 4
         RelaxDistr = distributions[(tmin, tmax)]
+        if DEBUG:
+            print(len(RelaxDistr),int(BER * len(RelaxDistr) / 2))
         Rlow, Rhigh = getReadRange(RelaxDistr, BER)
         # assert Rlow <= tmin and tmax <= Rhigh, (Rlow, Rhigh, tmin, tmax)
         levels.append([Rlow, Rhigh, tmin, tmax])
@@ -42,8 +48,9 @@ def longest_non_overlap(levels):
 
 
 def getReadRange(vals, BER):
+    # The read range [Rmin, Rmax) -- any point within [Rmin, Rmax) are within this level
     num_discard = int(BER * len(vals) / 2)
-    return vals[num_discard], vals[-num_discard]
+    return vals[num_discard], vals[-num_discard] + 1
 
 def refine(level_alloc):
     '''
@@ -53,12 +60,14 @@ def refine(level_alloc):
     --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]
     --> [0, ...                                               , 63, ...  ]
     '''
+    print("before refine", level_alloc)
     for i in range(1, len(level_alloc)):
+        assert level_alloc[i - 1][1] <= level_alloc[i][0] 
         merge = int((level_alloc[i - 1][1] + level_alloc[i][0]) / 2)
         level_alloc[i - 1][1] = merge
         level_alloc[i][0] = merge
     level_alloc[0][0] = 0
-    level_alloc[len(level_alloc)-1][1] = 63
+    level_alloc[len(level_alloc)-1][1] = 64
     return level_alloc
 
 def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1):
@@ -103,4 +112,4 @@ def dump_to_json(level_alloc):
 if __name__ == "__main__":
     init_model()
     dump_to_json(minimal_BER(4, 1e-1))
-    dump_to_json(minimal_BER(8, 1e-2))
+    dump_to_json(minimal_BER(8, 1e-3))

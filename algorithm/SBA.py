@@ -3,7 +3,7 @@ import numpy as np
 import pprint
 from scipy.stats import norm
 
-date="Apr26"
+date="Apr29"
 
 distributions = {}
 def init_model():
@@ -29,7 +29,7 @@ def level_inference(BER):
             if Rlow >= levels[-1][1]: # current level does not overlap with prior level's Rhigh
                 levels.append([Rlow, Rhigh, tmin, tmax])
     levels[0][0] = 0
-    levels[len(levels)-1][1] = 63
+    levels[len(levels)-1][1] = 64
     return levels
 
 def longest_non_overlap(levels):
@@ -71,7 +71,7 @@ def getReadRange(distr, number_of_sigma):
     # Given the percentile, and the distribution of write, get the read regions
     read_low = norm.ppf(percentile1, loc=mean, scale=sigma)
     read_high = norm.ppf(percentile2, loc=mean, scale=sigma)
-    return read_low, read_high
+    return read_low, read_high + 1
 
 def refine(level_alloc):
     '''
