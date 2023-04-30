@@ -5,6 +5,7 @@ import pandas as pd
 # Get retention data
 header = ["addr,time,after_relax,i,after_write,tmin,tmax,timept"]
 distributions = {} # (tmin, tmax) --> [after_relax points]
+distri_0s = {} # (tmin, tmax) --> [after_write points]
 
 def init_distributions():
     with open("../data/retention1s.csv", "r") as f:
@@ -23,10 +24,12 @@ def init_distributions():
             assert timept == 1
             if (tmin, tmax) not in distributions:
                 distributions[(tmin, tmax)] = []
+                distri_0s[(tmin, tmax)] = []
             # only use 200 cells' data
             # if len(distributions[(tmin, tmax)]) == 200:
             #     continue
             distributions[(tmin, tmax)].append(after_relax)
+            distri_0s[(tmin, tmax)].append(after_write)
 
 def check():
     if len(distributions) != 60:
@@ -36,12 +39,19 @@ def check():
         distributions[(tmin, tmax)].sort()
         if len(distributions[(tmin, tmax)]) < 200:
             print("ERROR:", tmin, tmax, len(distributions[(tmin, tmax)]))
+        distri_0s[(tmin, tmax)].sort()
+        if len(distri_0s[(tmin, tmax)]) < 200:
+            print("ERROR:", tmin, tmax, len(distri_0s[(tmin, tmax)]))
 
 def dump():
     with open("../model/retention1s.csv", "w") as f:
         for tmin in range(0, 60):
             tmax = tmin + 4
             f.write(f"{tmin},{tmax},{','.join(map(str, distributions[(tmin, tmax)]))}\n")
+    with open("../model/retention0s.csv", "w") as f:
+        for tmin in range(0, 60):
+            tmax = tmin + 4
+            f.write(f"{tmin},{tmax},{','.join(map(str, distri_0s[(tmin, tmax)]))}\n")
 
 if __name__ == "__main__":
     init_distributions()
