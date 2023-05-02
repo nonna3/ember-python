@@ -3,7 +3,7 @@ import numpy as np
 import pprint
 from scipy.stats import norm
 
-date="Apr29"
+date="May1"
 
 distributions = {}
 def init_model():
@@ -26,27 +26,13 @@ def level_inference(BER):
         if len(levels) == 0:
             levels.append([Rlow, Rhigh, tmin, tmax])
         else:
-            if Rlow >= levels[-1][1]: # current level does not overlap with prior level's Rhigh
+            # current level's Rlow does not overlap with prior level's Rhigh
+            # current level's tmin (write ranges) does not overlap with prior level's tmax
+            if Rlow >= levels[-1][1] and tmin >= levels[-1][3]:
                 levels.append([Rlow, Rhigh, tmin, tmax])
     levels[0][0] = 0
     levels[len(levels)-1][1] = 64
     return levels
-
-def longest_non_overlap(levels):
-    # this is a greedy algorithm
-    # levels is a list of levels, each level is a list of [Rlow, Rhigh, tmin, tmax]
-    res = []
-    # first sort by Rhigh
-    sorted_levels = sorted(levels, key=lambda x: x[1])
-    res.append(sorted_levels[0])
-    cur = sorted_levels[0]
-    for i in range(1, len(sorted_levels)):
-        nxt = sorted_levels[i]
-        # the next level's Rlow does not overlap with the current level's Rhigh
-        if nxt[0] >= cur[1]:
-            res.append(nxt)
-            cur = nxt
-    return res
 
 def getReadRange(distr, number_of_sigma):
     '''
@@ -127,4 +113,4 @@ if __name__ == "__main__":
     res = minimal_BER(0.1, 2, 0.01)
     dump_to_json(res[4])
     dump_to_json(res[8])
-    dump_to_json(res[16])
+    # dump_to_json(res[16])

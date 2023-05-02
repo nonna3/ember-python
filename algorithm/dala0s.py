@@ -1,7 +1,7 @@
 import json
 import pprint
 
-date="Apr30"
+date="May1"
 
 DEBUG = False
 
@@ -41,7 +41,8 @@ def longest_non_overlap(levels):
     for i in range(1, len(sorted_levels)):
         nxt = sorted_levels[i]
         # the next level's Rlow does not overlap with the current level's Rhigh
-        if nxt[0] >= cur[1]:
+        # the next level's tmin (write ranges) does not overlap with current level's tmax
+        if nxt[0] >= cur[1] and nxt[2] >= cur[3]:
             res.append(nxt)
             cur = nxt
     return res
@@ -113,4 +114,4 @@ if __name__ == "__main__":
     init_model()
     dump_to_json(minimal_BER(4, 1e-1))
     dump_to_json(minimal_BER(8, 1e-3))
-    dump_to_json(minimal_BER(16, 1e-5))
+    # dump_to_json(minimal_BER(16, 1e-5))
