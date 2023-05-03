@@ -3,7 +3,7 @@ import numpy as np
 import pprint
 from scipy.stats import norm
 
-date="May1"
+date="May2"
 
 distributions = {}
 def init_model():
@@ -110,7 +110,7 @@ def dump_to_json(level_alloc):
 
 if __name__ == "__main__":
     init_model()
-    res = minimal_BER(0.1, 2, 0.01)
+    res = minimal_BER(0.5, 7, 0.1)
     dump_to_json(res[4])
     dump_to_json(res[8])
     # dump_to_json(res[16])
