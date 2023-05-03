@@ -1,7 +1,7 @@
 import json
 import pprint
 
-date="May1"
+date="May2"
 
 DEBUG = False
 
@@ -71,7 +71,28 @@ def refine(level_alloc):
     level_alloc[len(level_alloc)-1][1] = 64
     return level_alloc
 
-def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1):
+def half(level_alloc):
+    assert len(level_alloc) % 2 == 0
+    res = []
+    '''
+    [Rlow_i, Rhigh_i, tmin_i, tmax_i], [Rlow_{i+1}, Rhigh_{i+1}, tmin_{i+1}, tmax_{i+1}]
+    -->
+    [Rlow_i, Rhigh_{i+1}, (tmin_i+tmin_{i+1} ) / 2, (tmax_i+tmax_{i+1} ) / 2] 
+    '''
+    for i in range(0, int(len(level_alloc) / 2)):
+        res.append([level_alloc[i*2][0], level_alloc[i*2+1][1],
+                    int((level_alloc[i*2][2] + level_alloc[i*2+1][2]) / 2),
+                    int((level_alloc[i*2][3] + level_alloc[i*2+1][3]) / 2)])
+    assert len(res) == len(level_alloc) / 2
+    return res
+
+
+
+def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1, double=False):
+    # rationale for double: for 4 levels with insufficient data to characterize the error
+    #   we need to allocate 8 levels then half the levels
+    if double:
+        specified_levels = specified_levels * 2
     while high_BER - low_BER > eps:
         cur_BER = (low_BER + high_BER) / 2
         cur_levels = level_inference(cur_BER)
@@ -83,9 +104,11 @@ def minimal_BER(specified_levels, eps, low_BER = 0, high_BER = 1):
         else:
             high_BER = cur_BER
             best_level, best_BER = cur_levels, cur_BER
+    if double:
+        best_level = half(best_level)
     refined = refine(best_level)
     print(refined, best_BER)
-    assert len(refined) == specified_levels
+    assert len(refined) == specified_levels / 2 if double else specified_levels
     return refined
 
 def read_from_json(filename):
@@ -112,6 +135,6 @@ def dump_to_json(level_alloc):
 
 if __name__ == "__main__":
     init_model()
-    dump_to_json(minimal_BER(4, 1e-1))
+    dump_to_json(minimal_BER(4, 1e-3, 0, 1, True))
     dump_to_json(minimal_BER(8, 1e-3))
-    # dump_to_json(minimal_BER(16, 1e-5))
+    # dump_to_json(minimal_BER(16, 1e-10))
