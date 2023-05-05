@@ -30,8 +30,7 @@ def level_inference(BER):
             # current level's tmin (write ranges) does not overlap with prior level's tmax
             if Rlow >= levels[-1][1] and tmin >= levels[-1][3]:
                 levels.append([Rlow, Rhigh, tmin, tmax])
-    levels[0][0] = 0
-    levels[len(levels)-1][1] = 64
+    levels = refine(levels)
     return levels
 
 def getReadRange(distr, number_of_sigma):
@@ -61,18 +60,17 @@ def getReadRange(distr, number_of_sigma):
 
 def refine(level_alloc):
     '''
-    close the gap between adjacent read ranges
-    Example: list of [Rlow, Rhigh, tmin, tmax]
-        [2, 14, 0, 4], [16, 28, 16, 20], [32, 44, 33, 37], [48, 56, 46, 50]
-    --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]
-    --> [0, ...                                               , 63, ...  ]
+    Make the level boundaries integer (because ppf may return non-integer),
+    and also make starting and ending levels correct
     '''
+    #print("before refine", level_alloc)
+    level_alloc[0][1] = int(level_alloc[0][1])
     for i in range(1, len(level_alloc)):
-        merge = int((level_alloc[i - 1][1] + level_alloc[i][0]) / 2)
-        level_alloc[i - 1][1] = merge
-        level_alloc[i][0] = merge
+        assert level_alloc[i - 1][1] <= level_alloc[i][0] 
+        level_alloc[i][0] = int(level_alloc[i][0])
+        level_alloc[i][1] = int(level_alloc[i][1])
     level_alloc[0][0] = 0
-    level_alloc[len(level_alloc)-1][1] = 63
+    level_alloc[len(level_alloc)-1][1] = 64
     return level_alloc
 
 def minimal_BER(sigma_start, sigma_end, sigma_delta):
@@ -99,12 +97,13 @@ def dump_to_json(level_alloc):
         bits_per_cell = 3
     elif len(level_alloc) == 4:
         bits_per_cell = 2
+    print(len(level_alloc), level_alloc)
     bpc = read_from_json(f"../settings/{bits_per_cell}bpc.json")
     for i in range(0, len(level_alloc)):
         # [Rlow, Rhigh, tmin, tmax]
-        bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = int(level_alloc[i][1])
-        bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = int(level_alloc[i][2])
-        bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = int(level_alloc[i][3])
+        bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = level_alloc[i][1]
+        bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = level_alloc[i][2]
+        bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = level_alloc[i][3]
     write_to_json(bpc, f"../settings/{bits_per_cell}bpc_SBA_{date}.json")
 
 
