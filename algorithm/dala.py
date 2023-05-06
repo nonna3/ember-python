@@ -7,7 +7,7 @@ DEBUG = False
 
 distributions = {}
 def init_model():
-    with open("../model/retention1s.csv", "r") as f:
+    with open("/workspaces/ember-python/model/retention1s.csv", "r") as f:
         lines = f.readlines()
         for line in lines:
             tokens = line.split(',')
@@ -21,7 +21,7 @@ def level_inference(BER):
         print(BER, "Started")
     levels = []
     for tmin in range(0, 60):
-        tmax = tmin + 4
+        tmax = tmin + 4 # SF: Assumes that write ranges have a width of 4
         RelaxDistr = distributions[(tmin, tmax)]
         if DEBUG:
             print(len(RelaxDistr),int(BER * len(RelaxDistr) / 2))
@@ -61,6 +61,7 @@ def refine(level_alloc):
     --> [2, 15, 0, 4], [15, 30, 16, 20], [30, 46, 33, 37], [46, 56, 46, 50]
     --> [0, ...                                               , 63, ...  ]
     '''
+    ## SF: can make refine alg better for our purposes
     print("before refine", level_alloc)
     for i in range(1, len(level_alloc)):
         assert level_alloc[i - 1][1] <= level_alloc[i][0] 
@@ -124,13 +125,13 @@ def dump_to_json(level_alloc):
         bits_per_cell = 3
     elif len(level_alloc) == 4:
         bits_per_cell = 2
-    bpc = read_from_json(f"../settings/{bits_per_cell}bpc.json")
+    bpc = read_from_json(f"/workspaces/ember-python/settings/{bits_per_cell}bpc.json")
     for i in range(0, len(level_alloc)):
         # [Rlow, Rhigh, tmin, tmax]
         bpc['level_settings'][i]["adc_upper_read_ref_lvl"] = level_alloc[i][1]
         bpc['level_settings'][i]["adc_lower_write_ref_lvl"] = level_alloc[i][2]
         bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = level_alloc[i][3]
-    write_to_json(bpc, f"../settings/{bits_per_cell}bpc_dala_{date}.json")
+    write_to_json(bpc, f"/workspaces/ember-python/settings/{bits_per_cell}bpc_dala_{date}.json")
 
 
 if __name__ == "__main__":
