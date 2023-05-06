@@ -47,6 +47,7 @@ def longest_non_overlap(levels):
             cur = nxt
     return res
 
+## TODO: write alg that computes the BER of a given level alloc
 
 def getReadRange(vals, BER):
     # The read range [Rmin, Rmax) -- any point within [Rmin, Rmax) are within this level
@@ -70,6 +71,8 @@ def refine(level_alloc):
         level_alloc[i][0] = merge
     level_alloc[0][0] = 0
     level_alloc[len(level_alloc)-1][1] = 64
+    print("after refine", level_alloc)
+    print("num bins", len(level_alloc))
     return level_alloc
 
 def half(level_alloc):
@@ -133,9 +136,10 @@ def dump_to_json(level_alloc):
         bpc['level_settings'][i]["adc_upper_write_ref_lvl"] = level_alloc[i][3]
     write_to_json(bpc, f"/workspaces/ember-python/settings/{bits_per_cell}bpc_dala_{date}.json")
 
-
 if __name__ == "__main__":
     init_model()
-    dump_to_json(minimal_BER(4, 1e-3, 0, 1, True))
-    dump_to_json(minimal_BER(8, 1e-3))
+    BER = 5e-2
+    refine(level_inference(BER))
+    #dump_to_json(minimal_BER(4, 1e-3, 0, 1, True))
+    #dump_to_json(minimal_BER(8, 1e-3))
     # dump_to_json(minimal_BER(16, 1e-10))
